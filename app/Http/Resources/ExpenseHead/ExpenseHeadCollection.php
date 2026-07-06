@@ -18,3 +18,4 @@ class ExpenseHeadCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

@@ -2,61 +2,61 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Campus\StoreCampusRequest;
-use App\Http\Requests\Campus\UpdateCampusRequest;
+use App\Http\Requests\Campus\CampusRequest;
 use App\Http\Resources\Campus\CampusCollection;
 use App\Http\Resources\Campus\CampusResource;
-use App\Models\Campus;
+use App\Http\Facades\CampusFacade;
 use Illuminate\Http\Request;
 
 class CampusController extends Controller
 {
-    protected $userLoader=['address','logo_image','school','education_board' ];
+    use ApiResponseTrait;
+
     public function index(Request $request)
     {
-
-        return new CampusCollection(Campus::with($this->userLoader)
-        ->get());
+        $query = CampusFacade::getAll($request);
+        return new CampusCollection($query);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreCampusRequest $request)
+    public function store(CampusRequest $request)
     {
 
         $data = $request->validated();
-        $campus = Campus::create($data);
-        return new CampusResource($campus->load($this->userLoader));
+        $campus = CampusFacade::create($data);
+        return new CampusResource($campus);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Campus $campus)
+    public function show($campusId)
     {
-
-        return new CampusResource($campus->load($this->userLoader));
+        $campus = CampusFacade::getById($campusId);
+        return new CampusResource($campus);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateCampusRequest $request, Campus $campus)
+    public function update(CampusRequest $request, $campusId)
     {
         $data = $request->validated();
-        $campus->update($data);
+        $campus = CampusFacade::update($campusId, $data);
 
-        return new CampusResource($campus->load($this->userLoader));
+        return new CampusResource($campus);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Campus $campus)
+    public function destroy($campusId)
     {
-        $campus->delete();
+        CampusFacade::delete($campusId);
         return response(null, 204);
     }
 }

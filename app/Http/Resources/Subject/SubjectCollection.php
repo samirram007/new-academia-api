@@ -17,3 +17,4 @@ class SubjectCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

@@ -10,14 +10,16 @@ class ExaminationResult extends Model
     use HasFactory;
 
     protected $fillable=[
-        'examination_scheduled_id',
-        'marks',
-        'student_id'
+        'examination_schedule_id',
+        'student_id',
+        'marks_obtained',
+        'grade',
+        'remarks',
     ];
 
 
-    public function examination_scheduled(){
-        return $this->belongsTo(ExaminationSchedule::class);
+    public function examination_schedule(){
+        return $this->belongsTo(ExaminationSchedule::class, 'examination_schedule_id');
     }
 
     public function student(){

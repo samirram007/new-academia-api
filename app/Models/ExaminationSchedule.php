@@ -10,10 +10,12 @@ class ExaminationSchedule extends Model
     use HasFactory;
     protected $fillable=[
         'examination_standard_id',
-        'examination_date',
-        'examination_time',
         'subject_id',
-        'teacher_id'
+        'teacher_id',
+        'exam_date',
+        'start_time',
+        'end_time',
+        'room_id',
     ];
 
 
@@ -28,6 +30,14 @@ class ExaminationSchedule extends Model
     public function teacher()
     {
         return $this->belongsTo(User::class);
+    }
+    public function room()
+    {
+        return $this->belongsTo(Room::class);
+    }
+    public function results()
+    {
+        return $this->hasMany(ExaminationResult::class, 'examination_schedule_id');
     }
 
 }

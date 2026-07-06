@@ -11,6 +11,8 @@ class Examination extends Model
     use HasFactory;
     protected $fillable = [
         'name',
+        'code',
+        'description',
         'examination_type_id',
         'examination_start_date',
         'examination_end_date',

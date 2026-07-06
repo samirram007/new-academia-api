@@ -11,6 +11,7 @@ use App\Http\Resources\StudentSession\StudentSessionCollection;
 use App\Http\Resources\StudentSession\StudentSessionResource;
 use App\Http\Resources\SuccessResource;
 use App\Http\Resources\User\UserResource;
+use App\Http\Resources\FeeReceipt\FeeReceiptCollection;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -49,6 +50,7 @@ class FeeResource extends SuccessResource
             "student" => new UserResource($this->whenLoaded('student')),
             "fee_items" => new FeeItemCollection($this->whenLoaded('fee_items')),
             "student_session" => new StudentSessionResource($this->whenLoaded('student_session')),
+            'fee_receipts' => new FeeReceiptCollection($this->whenLoaded('fee_receipts')),
         ];
     }
 }

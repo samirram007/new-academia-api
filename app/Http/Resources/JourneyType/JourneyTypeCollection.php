@@ -17,3 +17,4 @@ class JourneyTypeCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

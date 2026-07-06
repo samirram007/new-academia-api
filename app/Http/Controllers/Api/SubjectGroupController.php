@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Services\SubjectGroupService;
 use App\Http\Requests\SubjectGroup\StoreSubjectGroupRequest;
 use App\Http\Requests\SubjectGroup\UpdateSubjectGroupRequest;
 use App\Http\Resources\SubjectGroup\SubjectGroupCollection;
@@ -17,8 +18,8 @@ class SubjectGroupController extends Controller
      */
     public function index(Request $request)
     {
-
-        return new SubjectGroupCollection(SubjectGroup::all());
+        $data = app(SubjectGroupService::class)->getAll();
+        return new SubjectGroupCollection($data);
     }
 
     /**
@@ -26,38 +27,39 @@ class SubjectGroupController extends Controller
      */
     public function store(StoreSubjectGroupRequest $request)
     {
-
         $data = $request->validated();
-        $subject = SubjectGroup::create($data);
+        $subject = app(SubjectGroupService::class)->create($data);
         return new SubjectGroupResource($subject);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(SubjectGroup $subjectGroup)
+    public function show(int $id)
     {
-
+        $subjectGroup = app(SubjectGroupService::class)->getById($id);
+        if (!$subjectGroup) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
         return new SubjectGroupResource($subjectGroup);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSubjectGroupRequest $request, SubjectGroup $subjectGroup)
+    public function update(UpdateSubjectGroupRequest $request, int $id)
     {
-
         $data = $request->validated();
-        $subjectGroup->update($data);
+        $subjectGroup = app(SubjectGroupService::class)->update($id, $data);
         return new SubjectGroupResource($subjectGroup);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SubjectGroup $subjectGroup)
+    public function destroy(int $id)
     {
-        $subjectGroup->delete();
+        app(SubjectGroupService::class)->delete($id);
         return response(null, 204);
     }
 }

@@ -17,3 +17,4 @@ class StudentSessionCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

@@ -3,9 +3,9 @@
 namespace App\Http\Resources\Book;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Http\Resources\SuccessCollection;
 
-class BookCollection extends ResourceCollection
+class BookCollection extends SuccessCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,3 +17,4 @@ class BookCollection extends ResourceCollection
         return parent::toArray($request);
     }
 }
+

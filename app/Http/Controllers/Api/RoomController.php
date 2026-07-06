@@ -7,32 +7,16 @@ use App\Http\Requests\Room\StoreRoomRequest;
 use App\Http\Requests\Room\UpdateRoomRequest;
 use App\Http\Resources\Room\RoomCollection;
 use App\Http\Resources\Room\RoomResource;
+use App\Http\Services\RoomService;
 use App\Models\Room;
 use Illuminate\Http\Request;
 
 class RoomController extends Controller
 {
-    protected $userLoader=['floor','floor.building','floor.building.campus'];
     public function index(Request $request)
     {
-        $message=[];
-
-
-        if(!$request->has('floor_id')){
-            array_push($message,'Please provide floor_id');
-        }
-        if($message){
-            return response()->json(
-                [
-                   'status'=>false,
-                   'message' => $message
-                ]
-           , 400);
-        }
-        return new RoomCollection(Room::with($this->userLoader)
-        ->where('floor_id',$request->input('floor_id'))
-        ->get());
-
+        $data = app(RoomService::class)->getAll();
+        return new RoomCollection($data);
     }
 
     /**
@@ -40,38 +24,39 @@ class RoomController extends Controller
      */
     public function store(StoreRoomRequest $request)
     {
-
         $data = $request->validated();
-        $room = Room::create($data);
-       // dd($room);
-        return new RoomResource($room->load($this->userLoader));
+        $room = app(RoomService::class)->create($data);
+        return new RoomResource($room->load(app(RoomService::class)->getResource()));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Room $room)
+    public function show(int $id)
     {
-
-        return new RoomResource($room->load($this->userLoader));
+        $room = app(RoomService::class)->getById($id);
+        if (!$room) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return new RoomResource($room->load(app(RoomService::class)->getResource()));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateRoomRequest $request, Room $room)
+    public function update(UpdateRoomRequest $request, int $id)
     {
         $data = $request->validated();
-        $room->update($data);
-        return new RoomResource($room->load($this->userLoader));
+        $room = app(RoomService::class)->update($id, $data);
+        return new RoomResource($room->load(app(RoomService::class)->getResource()));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Room $room)
+    public function destroy(int $id)
     {
-        $room->delete();
+        app(RoomService::class)->delete($id);
         return response(null, 204);
     }
 }

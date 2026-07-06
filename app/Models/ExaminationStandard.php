@@ -11,7 +11,10 @@ class ExaminationStandard extends Model
 
     protected $fillable=[
         'academic_standard_id',
-        'examination_id'
+        'examination_id',
+        'subject_id',
+        'passing_marks',
+        'total_marks',
     ];
 
     public function academic_standard(){
@@ -20,5 +23,13 @@ class ExaminationStandard extends Model
 
     public function examination(){
        return $this->belongsTo(Examination::class);
+    }
+
+    public function subject(){
+        return $this->belongsTo(Subject::class);
+    }
+
+    public function schedules(){
+        return $this->hasMany(ExaminationSchedule::class, 'examination_standard_id');
     }
 }

@@ -2,61 +2,62 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Requests\EducationBoard\EducationBoardRequest;
+use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\EducationBoard\StoreEducationBoardRequest;
-use App\Http\Requests\EducationBoard\UpdateEducationBoardRequest;
 use App\Http\Resources\EducationBoard\EducationBoardCollection;
 use App\Http\Resources\EducationBoard\EducationBoardResource;
-use App\Models\EducationBoard;
+use App\Http\Facades\EducationBoardFacade;
+use App\Http\Services\EducationBoardService;
 use Illuminate\Http\Request;
 
 class EducationBoardController extends Controller
 {
-    protected $userLoader=['address','logo_image' ];
+    use ApiResponseTrait;
     public function index(Request $request)
     {
-
-
-        return new EducationBoardCollection(
-            EducationBoard::with($this->userLoader)
-            ->get());
+        $data = app(EducationBoardService::class)->getAll();
+        return new EducationBoardCollection($data);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreEducationBoardRequest $request)
+    public function store(EducationBoardRequest $request)
     {
         $data = $request->validated();
-        $educationBoard = EducationBoard::create($data);
-        return new EducationBoardResource($educationBoard);
+        $educationBoard = EducationBoardFacade::create($data);
+        return new EducationBoardResource($educationBoard->load(app(EducationBoardService::class)->getResource()));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(EducationBoard $educationBoard)
+    public function show(int $id)
     {
-
-        return new EducationBoardResource($educationBoard->load($this->userLoader));
+        $educationBoard = EducationBoardFacade::getById($id);
+        if (!$educationBoard) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return new EducationBoardResource($educationBoard->load(app(EducationBoardService::class)->getResource()));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateEducationBoardRequest $request, EducationBoard $educationBoard)
+    public function update(EducationBoardRequest $request, int $id)
     {
         $data = $request->validated();
-        $educationBoard->update($data);
-        return new EducationBoardResource($educationBoard);
+        $educationBoard = EducationBoardFacade::update($id, $data);
+        return new EducationBoardResource($educationBoard->load(app(EducationBoardService::class)->getResource()));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(EducationBoard $educationBoard)
+    public function destroy(int $id)
     {
-        $educationBoard->delete();
+        EducationBoardFacade::delete($id);
         return response(null, 204);
     }
 }

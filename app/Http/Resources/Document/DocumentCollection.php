@@ -18,3 +18,4 @@ class DocumentCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

@@ -3,9 +3,9 @@
 namespace App\Http\Resources\State;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Http\Resources\SuccessCollection;
 
-class StateCollection extends ResourceCollection
+class StateCollection extends SuccessCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,3 +17,4 @@ class StateCollection extends ResourceCollection
         return parent::toArray($request);
     }
 }
+

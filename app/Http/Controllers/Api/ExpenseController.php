@@ -9,6 +9,7 @@ use App\Http\Resources\Expense\ExpenseCollection;
 use App\Http\Resources\Expense\ExpenseResource;
 use App\Models\AcademicSession;
 use App\Models\Expense;
+use App\Http\Services\ExpenseService;
 use App\Models\ExpenseItem;
 use DB;
 use Exception;
@@ -16,34 +17,10 @@ use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    protected $userLoader = ['academic_session', 'expense_items', 'expense_items.expense_head'];
     public function index(Request $request)
     {
-        $message = [];
-
-
-        if (!$request->has('academic_session_id')) {
-            array_push($message, 'Please provide academic_session_id');
-        }
-        if ($message) {
-            return response()->json(
-                [
-                    'status' => false,
-                    'message' => $message,
-                ]
-                , 400);
-        }
-        $expenses = Expense::with($this->userLoader)
-            ->where('academic_session_id', $request->input('academic_session_id'))
-            ->whereBetween('expense_date',[$request->input('from'),$request->input('to')])
-            ->orderBy('expense_date', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
-        //dd($expenses);
-        return new ExpenseCollection($expenses);
+        $data = app(ExpenseService::class)->getAll();
+        return new ExpenseCollection($data);
     }
 
     /**
@@ -75,7 +52,7 @@ class ExpenseController extends Controller
             $academicSession->current_expense_no = $academicSession->current_expense_no+1;
             $academicSession->update();
             });
-            return new ExpenseResource($expense->load($this->userLoader));
+            return new ExpenseResource($expense->load(app(ExpenseService::class)->getResource()));
         } catch (Exception $e) {
         return response()->json(['error' => 'Check you input(s)'], 401);
     }
@@ -94,7 +71,7 @@ class ExpenseController extends Controller
      */
     public function show(Expense $expense)
     {
-        // return new ExpenseResource($expense->load($this->userLoader));
+        // return new ExpenseResource($expense->load($this->resource));
         $expense = Expense::with(
             'academic_session',
             'user',
@@ -132,7 +109,7 @@ class ExpenseController extends Controller
                 $expense_item->save();
             }
             });
-            return new ExpenseResource($expense->load($this->userLoader));
+            return new ExpenseResource($expense->load(app(ExpenseService::class)->getResource()));
 
         } catch (Exception $e) {
         return response()->json(['error' => 'Check you input(s)'], 401);

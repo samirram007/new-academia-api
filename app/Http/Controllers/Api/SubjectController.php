@@ -7,33 +7,15 @@ use App\Http\Requests\Subject\StoreSubjectRequest;
 use App\Http\Requests\Subject\UpdateSubjectRequest;
 use App\Http\Resources\Subject\SubjectCollection;
 use App\Http\Resources\Subject\SubjectResource;
-use App\Models\Subject;
+use App\Http\Services\SubjectService;
 use Illuminate\Http\Request;
 
 class SubjectController extends Controller
 {
-    protected $userLoader=['academic_standard','subject_group','logo_image'];
     public function index(Request $request)
     {
-        $message=[];
-        if(!$request->has('academic_standard_id')){
-            array_push($message,'Please provide academic_standard_id');
-        }
-        if(!$request->has('subject_group_id')){
-            array_push($message,'Please provide subject_group_id');
-        }
-        if($message){
-            return response()->json(
-                [
-                   'status'=>false,
-                   'message' => $message
-                ]
-           , 400);
-        }
-        return new SubjectCollection(Subject::with($this->userLoader)
-        ->where('academic_standard_id',$request->input('academic_standard_id'))
-        ->where('subject_group_id',$request->input('subject_group_id'))
-        ->get());
+        $data = app(SubjectService::class)->getAll();
+        return new SubjectCollection($data);
     }
 
     /**
@@ -41,38 +23,39 @@ class SubjectController extends Controller
      */
     public function store(StoreSubjectRequest $request)
     {
-
         $data = $request->validated();
-        $subject = Subject::create($data);
-        return new SubjectResource($subject->load($this->userLoader));
+        $subject = app(SubjectService::class)->create($data);
+        return new SubjectResource($subject->load(app(SubjectService::class)->getResource()));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Subject $subject)
+    public function show(int $id)
     {
-
-        return new SubjectResource($subject->load($this->userLoader));
+        $subject = app(SubjectService::class)->getById($id);
+        if (!$subject) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return new SubjectResource($subject->load(app(SubjectService::class)->getResource()));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSubjectRequest $request, Subject $subject)
+    public function update(UpdateSubjectRequest $request, int $id)
     {
-
         $data = $request->validated();
-        $subject->update($data);
-        return new SubjectResource($subject->load($this->userLoader));
+        $subject = app(SubjectService::class)->update($id, $data);
+        return new SubjectResource($subject->load(app(SubjectService::class)->getResource()));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Subject $subject)
+    public function destroy(int $id)
     {
-        $subject->delete();
+        app(SubjectService::class)->delete($id);
         return response(null, 204);
     }
 }

@@ -17,3 +17,4 @@ class DepartmentCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

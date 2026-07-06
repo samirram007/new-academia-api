@@ -68,7 +68,7 @@ class UserResource extends SuccessResource
             'guardians'=>new GuardianCollection($this->whenLoaded('guardians')),
             'education'=>$this->whenNotNull($this->education),
             'occupation'=>$this->whenNotNull($this->occupation),
-            'earnings'=>$this->whenNotNull($this->occupation)
+            'earnings'=>$this->whenNotNull($this->earnings)
         ];
 
 

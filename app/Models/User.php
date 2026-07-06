@@ -18,7 +18,7 @@ use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use  HasFactory,Notifiable;
+    use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -35,7 +35,7 @@ class User extends Authenticatable implements JWTSubject
         'address_id',
         'status',
         'emergency_contact_name',
-        'emergency_contact_number',
+        'emergency_contact_no',
         'birth_mark',
         'medical_conditions',
         'allergies',
@@ -66,7 +66,6 @@ class User extends Authenticatable implements JWTSubject
         'admission_date',
         'education',
         'occupation',
-        'earnings'
 
     ];
 
@@ -88,6 +87,9 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'username' => 'string',
         'email_verified_at' => 'datetime',
+        'admission_date' => 'date',
+        'dob' => 'date',
+
         'password' => 'hashed',
         'user_type' => UserTypeEnum::class,
         'status' => UserStatusEnum::class,

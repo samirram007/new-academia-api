@@ -59,7 +59,7 @@ class GuardianResource extends SuccessResource
 
             'education'=>$this->whenNotNull($this->education),
             'occupation'=>$this->whenNotNull($this->occupation),
-            'earnings'=>$this->whenNotNull($this->occupation)
+            'earnings'=>$this->whenNotNull($this->earnings)
 
         ];
 

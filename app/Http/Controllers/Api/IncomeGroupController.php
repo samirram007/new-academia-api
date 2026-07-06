@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Services\IncomeGroupService;
 use App\Http\Resources\IncomeGroup\IncomeGroupCollection;
 use App\Models\IncomeGroup;
 use Illuminate\Http\Request;
@@ -12,9 +13,10 @@ class IncomeGroupController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return new IncomeGroupCollection(IncomeGroup::all());
+        $data = app(IncomeGroupService::class)->getAll();
+        return new IncomeGroupCollection($data);
     }
 
     /**

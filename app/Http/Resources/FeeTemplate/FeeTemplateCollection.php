@@ -18,3 +18,4 @@ class FeeTemplateCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

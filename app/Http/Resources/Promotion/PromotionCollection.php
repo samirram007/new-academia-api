@@ -4,7 +4,6 @@ namespace App\Http\Resources\Promotion;
 
 use App\Http\Resources\SuccessCollection;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class PromotionCollection extends SuccessCollection
 {
@@ -19,3 +18,4 @@ class PromotionCollection extends SuccessCollection
     }
 
 }
+

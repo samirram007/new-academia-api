@@ -17,3 +17,4 @@ class SchoolCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

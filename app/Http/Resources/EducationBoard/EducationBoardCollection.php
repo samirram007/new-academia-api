@@ -17,3 +17,4 @@ class EducationBoardCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

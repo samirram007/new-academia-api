@@ -20,6 +20,7 @@ class ExaminationResource extends SuccessResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'code' => $this->code,
             'examination_type_id' => $this->examination_type_id,
             'academic_session_id' => $this->academic_session_id,
             'examination_start_date' => $this->examination_start_date,

@@ -14,6 +14,8 @@ class SchoolTypeCollection extends SuccessCollection
      */
     public function toArray(Request $request): array
     {
+
         return parent::toArray($request);
     }
 }
+

@@ -17,3 +17,4 @@ class IncomeGroupCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

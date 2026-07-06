@@ -4,7 +4,6 @@ namespace App\Http\Resources\Guardian;
 
 use App\Http\Resources\SuccessCollection;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class GuardianCollection extends SuccessCollection
 {

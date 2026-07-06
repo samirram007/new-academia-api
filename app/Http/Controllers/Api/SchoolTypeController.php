@@ -2,60 +2,69 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\SchoolType;
-use Illuminate\Http\Request;
+use App\Http\Facades\SchoolTypeFacade;
+use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\Controller;
+use App\Http\Services\SchoolTypeService;
+
+use Illuminate\Http\Request;
 use App\Http\Resources\SchoolType\SchoolTypeResource;
 use App\Http\Resources\SchoolType\SchoolTypeCollection;
-use App\Http\Requests\SchoolType\StoreSchoolTypeRequest;
-use App\Http\Requests\SchoolType\UpdateSchoolTypeRequest;
+use App\Http\Requests\SchoolType\SchoolTypeRequest;
 
 class SchoolTypeController extends Controller
 {
+    use ApiResponseTrait;
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
 
-        return new SchoolTypeCollection(SchoolType::paginate());
+        $data = SchoolTypeFacade::getAll();
+
+        return new SchoolTypeCollection($data);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSchoolTypeRequest $request)
+    public function store(SchoolTypeRequest $request)
     {
         $data = $request->validated();
-        $schoolType=SchoolType::create($data);
+        $schoolType = app(SchoolTypeService::class)->create($data);
         return new SchoolTypeResource($schoolType);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(SchoolType $schoolType)
+    public function show(int $id)
     {
-
+        $schoolType = app(SchoolTypeService::class)->getById($id);
+        if (!$schoolType) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
         return new SchoolTypeResource($schoolType);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSchoolTypeRequest $request,SchoolType $schoolType)
+    public function update(SchoolTypeRequest $request, int $id)
     {
         $data = $request->validated();
-        $schoolType->update($data);
+        $schoolType = app(SchoolTypeService::class)->update($id, $data);
         return new SchoolTypeResource($schoolType);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(SchoolType $schoolType)
+    public function destroy(int $id)
     {
-        $schoolType->delete();
+        app(SchoolTypeService::class)->delete($id);
         return response(null, 204);
     }
 }

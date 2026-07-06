@@ -18,3 +18,4 @@ class FeeHeadCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

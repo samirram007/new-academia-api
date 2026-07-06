@@ -17,3 +17,4 @@ class CampusCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

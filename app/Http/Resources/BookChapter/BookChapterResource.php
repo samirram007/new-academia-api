@@ -2,10 +2,11 @@
 
 namespace App\Http\Resources\BookChapter;
 
+use App\Http\Resources\Book\BookResource;
+use App\Http\Resources\SuccessResource;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
 
-class BookChapterResource extends JsonResource
+class BookChapterResource extends SuccessResource
 {
     /**
      * Transform the resource into an array.
@@ -14,6 +15,12 @@ class BookChapterResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'book_id' => $this->book_id,
+            'name' => $this->name,
+            'description' => $this->description,
+            'book' => new BookResource($this->whenLoaded('book')),
+        ];
     }
 }

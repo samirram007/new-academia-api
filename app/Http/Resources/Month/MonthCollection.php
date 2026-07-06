@@ -18,3 +18,4 @@ class MonthCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

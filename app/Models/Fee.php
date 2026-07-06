@@ -56,5 +56,9 @@ class Fee extends Model
         return $this->hasMany(FeeItemMonth::class);
     }
 
-
+    public function fee_receipts()
+    {
+        return $this->belongsToMany(FeeReceipt::class, 'fee_fee_receipts')
+            ->withTimestamps();
+    }
 }

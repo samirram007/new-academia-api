@@ -4,7 +4,6 @@ namespace App\Http\Resources\Student;
 
 use App\Http\Resources\SuccessCollection;
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class StudentCollection extends SuccessCollection
 {
@@ -19,3 +18,4 @@ class StudentCollection extends SuccessCollection
     }
 
 }
+

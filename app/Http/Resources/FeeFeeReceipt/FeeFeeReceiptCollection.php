@@ -3,9 +3,9 @@
 namespace App\Http\Resources\FeeFeeReceipt;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Http\Resources\SuccessCollection;
 
-class FeeFeeReceiptCollection extends ResourceCollection
+class FeeFeeReceiptCollection extends SuccessCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,3 +17,4 @@ class FeeFeeReceiptCollection extends ResourceCollection
         return parent::toArray($request);
     }
 }
+

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Services\ExpenseGroupService;
 use App\Http\Resources\ExpenseGroup\ExpenseGroupCollection;
 use App\Models\ExpenseGroup;
 use Illuminate\Http\Request;
@@ -12,9 +13,10 @@ class ExpenseGroupController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return new ExpenseGroupCollection(ExpenseGroup::all());
+        $data = app(ExpenseGroupService::class)->getAll();
+        return new ExpenseGroupCollection($data);
     }
 
     /**

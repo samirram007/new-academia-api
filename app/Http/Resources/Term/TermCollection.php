@@ -3,9 +3,9 @@
 namespace App\Http\Resources\Term;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Http\Resources\SuccessCollection;
 
-class TermCollection extends ResourceCollection
+class TermCollection extends SuccessCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,3 +17,4 @@ class TermCollection extends ResourceCollection
         return parent::toArray($request);
     }
 }
+

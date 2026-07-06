@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Traits\HasAdvancedFilter;
+use App\Traits\HasAcademicSession;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Fee\FeeCollection;
 use App\Http\Resources\Fee\FeeResource;
+use App\Models\Examination;
+use App\Models\ExaminationStandard;
+use App\Models\ExaminationResult;
 use App\Models\Fee;
 use App\Models\FeeHead;
 use App\Models\Month;
@@ -13,6 +18,171 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
+    use HasAdvancedFilter, HasAcademicSession;
+
+    /**
+     * Examination Marksheet Report
+     * Returns student-wise marks for a given examination and academic standard.
+     *
+     * Query params: examination_id (required), academic_standard_id (required)
+     */
+    public function marksheet_report(Request $request)
+    {
+        $examinationId = $request->input('examination_id');
+        $academicStandardId = $request->input('academic_standard_id');
+
+        if (!$examinationId || !$academicStandardId) {
+            return response()->json([
+                'status' => false,
+                'message' => ['examination_id and academic_standard_id are required.'],
+            ], 400);
+        }
+
+        // Get the examination
+        $examination = Examination::with(['examination_type', 'academic_session'])->find($examinationId);
+        if (!$examination) {
+            return response()->json(['status' => false, 'message' => ['Examination not found.']], 404);
+        }
+
+        // Get all examination_standards (subjects) for this exam + standard
+        $examStandards = ExaminationStandard::with(['subject', 'schedules'])
+            ->where('examination_id', $examinationId)
+            ->where('academic_standard_id', $academicStandardId)
+            ->get();
+
+        if ($examStandards->isEmpty()) {
+            return response()->json([
+                'status' => false,
+                'message' => ['No subjects found for this examination and standard combination.'],
+            ], 404);
+        }
+
+        // Build subjects array
+        $subjects = $examStandards->map(function ($es) {
+            return [
+                'id' => $es->id,
+                'subject_id' => $es->subject_id,
+                'subject_name' => $es->subject?->name ?? 'Unknown',
+                'passing_marks' => (float) ($es->passing_marks ?? 0),
+                'total_marks' => (float) ($es->total_marks ?? 0),
+            ];
+        });
+
+        // Get all schedule IDs for these standards
+        $scheduleIds = $examStandards->pluck('schedules')->flatten()->pluck('id');
+
+        // Get all active students in this academic standard
+        $academicSessionId = $examination->academic_session_id;
+        $studentSessions = StudentSession::with(['student', 'section'])
+            ->where('academic_standard_id', $academicStandardId)
+            ->where('academic_session_id', $academicSessionId)
+            ->where('status', 'active')
+            ->orderBy('roll_no')
+            ->get();
+
+        // Get all results for these students and schedules
+        $results = ExaminationResult::with(['examination_schedule'])
+            ->whereIn('examination_schedule_id', $scheduleIds)
+            ->whereIn('student_id', $studentSessions->pluck('student_id'))
+            ->get()
+            ->groupBy('student_id');
+
+        // Build student rows: each student has marks per subject
+        $students = $studentSessions->map(function ($ss) use ($results, $examStandards) {
+            $studentResults = $results->get($ss->student_id, collect());
+
+            // Map results by examination_standard_id (via schedule)
+            $marksByStandard = [];
+            foreach ($studentResults as $result) {
+                $schedule = $result->examination_schedule;
+                if ($schedule) {
+                    $stdId = $schedule->examination_standard_id;
+                    if (!isset($marksByStandard[$stdId])) {
+                        $marksByStandard[$stdId] = [
+                            'marks_obtained' => (float) ($result->marks_obtained ?? $result->marks ?? 0),
+                            'grade' => $result->grade ?? '',
+                            'remarks' => $result->remarks ?? '',
+                        ];
+                    }
+                }
+            }
+
+            // Build subject marks array
+            $subjectMarks = $examStandards->map(function ($es) use ($marksByStandard) {
+                $data = $marksByStandard[$es->id] ?? null;
+                return [
+                    'examination_standard_id' => $es->id,
+                    'subject_name' => $es->subject?->name ?? 'Unknown',
+                    'marks_obtained' => $data ? $data['marks_obtained'] : null,
+                    'grade' => $data ? $data['grade'] : null,
+                    'remarks' => $data ? $data['remarks'] : null,
+                    'passing_marks' => (float) ($es->passing_marks ?? 0),
+                    'total_marks' => (float) ($es->total_marks ?? 0),
+                ];
+            });
+
+            // Calculate totals
+            $totalMarksObtained = $subjectMarks->sum('marks_obtained');
+            $totalMarks = $subjectMarks->sum('total_marks');
+            $totalPassingMarks = $subjectMarks->sum('passing_marks');
+            $percentage = $totalMarks > 0 ? round(($totalMarksObtained / $totalMarks) * 100, 2) : 0;
+
+            // Determine overall grade/pass-fail
+            $failedSubjects = $subjectMarks->filter(function ($sm) {
+                return $sm['marks_obtained'] !== null && $sm['marks_obtained'] < $sm['passing_marks'];
+            });
+            $overallStatus = $failedSubjects->count() > 0 ? 'FAIL' : 'PASS';
+            $overallGrade = $this->calculateGrade($percentage);
+
+            return [
+                'student_id' => $ss->student_id,
+                'student_name' => $ss->student?->name ?? 'Unknown',
+                'roll_no' => $ss->roll_no,
+                'section' => $ss->section?->name ?? '',
+                'subject_marks' => $subjectMarks,
+                'total_marks_obtained' => $totalMarksObtained,
+                'total_marks' => $totalMarks,
+                'total_passing_marks' => $totalPassingMarks,
+                'percentage' => $percentage,
+                'grade' => $overallGrade,
+                'status' => $overallStatus,
+                'failed_subjects' => $failedSubjects->count(),
+            ];
+        })->sortBy('roll_no')->values();
+
+        return response()->json([
+            'data' => [
+                'examination' => [
+                    'id' => $examination->id,
+                    'name' => $examination->name,
+                    'examination_type' => $examination->examination_type?->name ?? '',
+                    'academic_session' => $examination->academic_session?->session ?? '',
+                ],
+                'subjects' => $subjects,
+                'students' => $students,
+                'summary' => [
+                    'total_subjects' => $subjects->count(),
+                    'total_students' => $students->count(),
+                    'passed' => $students->where('status', 'PASS')->count(),
+                    'failed' => $students->where('status', 'FAIL')->count(),
+                ],
+            ],
+        ], 200);
+    }
+
+    private function calculateGrade(float $percentage): string
+    {
+        return match (true) {
+            $percentage >= 90 => 'A+',
+            $percentage >= 80 => 'A',
+            $percentage >= 70 => 'B+',
+            $percentage >= 60 => 'B',
+            $percentage >= 50 => 'C+',
+            $percentage >= 40 => 'C',
+            $percentage >= 33 => 'D',
+            default => 'F',
+        };
+    }
     /**
      * Display a listing of the resource.
      */
@@ -61,8 +231,9 @@ class ReportController extends Controller
 
             return [
                 'fee_date' => $fee->fee_date,
-                'id' => $fee->id, // Assuming 'fee_no' is the fee's id, replace if needed
-                'fee_no' => $fee->fee_no, // Assuming 'fee_no' is the fee's id, replace if needed
+                'id' => $fee->id,
+                'student_id' => $fee->student_id,
+                'fee_no' => $fee->fee_no,
                 'name' => $fee->student->name,
                 'class' => $fee->student_session->academic_class->name,
                 'section' => $fee->student_session->section->name,
@@ -76,22 +247,14 @@ class ReportController extends Controller
     }
     public function monthly_fee_collection_report(Request $request)
     {
-        $message = [];
+        $academicSessionId = $this->getAcademicSessionId($request);
 
-        if (!$request->has('academic_session_id')) {
-            array_push($message, 'Please provide academic_session_id');
-        }
-        // if (!$request->has('academic_class_id')) {
-        //     array_push($message, 'Please provide academic_class_id');
-        // }
-
-        if ($message) {
+        if (!$academicSessionId) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => $message,
-                ]
-                ,
+                    'message' => ['Please configure your academic session first.'],
+                ],
                 400
             );
         }
@@ -117,7 +280,7 @@ class ReportController extends Controller
             'campus.school.address',
             'campus.school.logo_image'
         ])
-            ->where('academic_session_id', $request->academic_session_id)
+            ->where('academic_session_id', $academicSessionId)
             ->where('is_deleted', '!=', 1); // Exclude soft-deleted fees
         if ($request->has('academic_class_id')) {
             $feesQuery->whereHas('student_session', function ($query) use ($request) {
@@ -200,22 +363,14 @@ class ReportController extends Controller
     }
     public function exam_fees_collection_report(Request $request)
     {
-        $message = [];
+        $academicSessionId = $this->getAcademicSessionId($request);
 
-        if (!$request->has('academic_session_id')) {
-            array_push($message, 'Please provide academic_session_id');
-        }
-        // if (!$request->has('academic_class_id')) {
-        //     array_push($message, 'Please provide academic_class_id');
-        // }
-
-        if ($message) {
+        if (!$academicSessionId) {
             return response()->json(
                 [
                     'status' => false,
-                    'message' => $message,
-                ]
-                ,
+                    'message' => ['Please configure your academic session first.'],
+                ],
                 400
             );
         }
@@ -235,7 +390,7 @@ class ReportController extends Controller
         ];
 
         $feesQuery = Fee::with($resource)
-            ->where('academic_session_id', $request->academic_session_id)
+            ->where('academic_session_id', $academicSessionId)
             ->where('is_deleted', '!=', 1); // Exclude soft-deleted fees;
         if ($request->has('academic_class_id')) {
             $feesQuery->whereHas('student_session', function ($query) use ($request) {

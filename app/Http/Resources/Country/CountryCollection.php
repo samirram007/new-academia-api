@@ -3,9 +3,9 @@
 namespace App\Http\Resources\Country;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Http\Resources\SuccessCollection;
 
-class CountryCollection extends ResourceCollection
+class CountryCollection extends SuccessCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,3 +17,4 @@ class CountryCollection extends ResourceCollection
         return parent::toArray($request);
     }
 }
+

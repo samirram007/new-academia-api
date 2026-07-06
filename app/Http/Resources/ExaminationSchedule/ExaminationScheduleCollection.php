@@ -17,3 +17,4 @@ class ExaminationScheduleCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

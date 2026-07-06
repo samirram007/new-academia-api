@@ -18,7 +18,6 @@ class School extends Model
         'code',
         'education_board_id',
         'address_id',
-        'description',
         'contact_no',
         'email',
         'website',

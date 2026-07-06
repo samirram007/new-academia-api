@@ -7,6 +7,7 @@ use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\User\UserCollection;
 use App\Http\Resources\User\UserResource;
+use App\Http\Services\UserService;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -15,20 +16,10 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    protected $userLoader=['address','address.state','address.country', 'addresses', 'addresses.state','addresses.country','designation','department','profile_document','guardians'];
     public function index(Request $request)
     {
-        //dd($request->has('user_type') );
-        //$request->has('user_type') && $request->role === 'admin'? $this->userLoader[]='roles' : null;
-
-        return new UserCollection(
-            $request->per_page
-            ? User::with($this->userLoader)
-            ->where('user_type',$request->has('user_type') ? $request->user_type:true)->paginate($request->per_page)
-            : User::with($this->userLoader)
-            ->where('user_type',$request->has('user_type') ? $request->user_type:true)
-            ->get()
-        );
+        $data = app(UserService::class)->getAll();
+        return new UserCollection($data);
     }
 
     /**
@@ -48,8 +39,8 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-
-        return new UserResource($user->load($this->userLoader));
+        $resource = app(UserService::class)->getResource();
+        return new UserResource($user->load($resource));
     }
 
     /**

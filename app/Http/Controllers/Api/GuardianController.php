@@ -2,33 +2,22 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Traits\HasAdvancedFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\StoreGuardianRequest;
-use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateGuardianRequest;
+use App\Http\Resources\Guardian\GuardianCollection;
 use App\Http\Resources\Guardian\GuardianResource;
-use App\Http\Resources\User\UserCollection;
-use App\Http\Resources\User\UserResource;
-use App\Models\StudentGuardian;
-use App\Models\User;
+use App\Http\Facades\GuardianFacade;
 use Illuminate\Http\Request;
 
 class GuardianController extends Controller
 {
-    protected $userLoader=['designation','department','profile_document'];
+    use HasAdvancedFilter;
+
     public function index(Request $request)
     {
-        //dd($request->has('user_type') );
-        //$request->has('user_type') && $request->role === 'admin'? $this->userLoader[]='roles' : null;
-
-        return new UserCollection(
-            $request->per_page
-            ? User::with($this->userLoader)
-            ->where('user_type',$request->has('user_type') ? $request->user_type:true)->paginate($request->per_page)
-            : User::with($this->userLoader)
-            ->where('user_type',$request->has('user_type') ? $request->user_type:true)
-            ->get()
-        );
+        return new GuardianCollection(GuardianFacade::getAll($request));
     }
 
     /**
@@ -37,43 +26,41 @@ class GuardianController extends Controller
     public function store(StoreGuardianRequest $request)
     {
         $data = $request->validated();
-
-        $user = User::create($data);
-        if($user){
-            $studentGuardian= new StudentGuardian();
-            $studentGuardian->guardian_id=$user->id;
-            $studentGuardian->student_id=$request->student_id;
-            $studentGuardian->save();
-        }
-       // dd($data,$user);
-        return new UserResource($user);
+        $user = GuardianFacade::create($data);
+        return new GuardianResource($user);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(int $id)
     {
-        //
+        $user = GuardianFacade::getById($id);
+        if (!$user) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return new GuardianResource($user);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateGuardianRequest $request, $id)
+    public function update(UpdateGuardianRequest $request, int $id)
     {
-
         $data = $request->validated();
-        $user = User::find($id);
-        $user->update($data);
+        $user = GuardianFacade::update($id, $data);
         return new GuardianResource($user);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(int $id)
     {
-        //
+        $response = GuardianFacade::delete($id);
+        if (!$response) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return response(null, 204);
     }
 }

@@ -3,48 +3,48 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\CampusAcademicSession;
-use Illuminate\Http\Request;
+use App\Http\Facades\CampusAcademicSessionFacade;
+use App\Http\Requests\CampusAcademicSession\StoreCampusAcademicSessionRequest;
+use App\Http\Requests\CampusAcademicSession\UpdateCampusAcademicSessionRequest;
+use App\Http\Resources\CampusAcademicSession\CampusAcademicSessionCollection;
+use App\Http\Resources\CampusAcademicSession\CampusAcademicSessionResource;
 
 class CampusAcademicSessionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return new CampusAcademicSessionCollection(CampusAcademicSessionFacade::getAll());
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreCampusAcademicSessionRequest $request)
     {
-        //
+        $data = $request->validated();
+        $model = CampusAcademicSessionFacade::create($data);
+        return new CampusAcademicSessionResource($model);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(CampusAcademicSession $campusAcademicSession)
+    public function show(int $id)
     {
-        //
+        $model = CampusAcademicSessionFacade::getById($id);
+        if (!$model) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return new CampusAcademicSessionResource($model);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, CampusAcademicSession $campusAcademicSession)
+    public function update(UpdateCampusAcademicSessionRequest $request, int $id)
     {
-        //
+        $data = $request->validated();
+        $model = CampusAcademicSessionFacade::update($id, $data);
+        return new CampusAcademicSessionResource($model);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(CampusAcademicSession $campusAcademicSession)
+    public function destroy(int $id)
     {
-        //
+        $response = CampusAcademicSessionFacade::delete($id);
+        if (!$response) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return response(null, 204);
     }
 }

@@ -5,18 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Resources\User\UserResource;
 use App\Http\Requests\Auth\SignupRequest;
 use App\Http\Resources\Auth\AuthUserResource;
-use App\Models\AcademicSession;
+
 
 class AuthController extends Controller
 {
     public function register(SignupRequest $request)
     {
         $data = $request->validated();
-        /** @var \App\Models\User $user */
+        /** @var  User $user */
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -35,7 +36,7 @@ class AuthController extends Controller
     public function login(LoginRequest $request)
     {
 
-        $credentials = $request->validated();
+        // $credentials = $request->validated();
         if (!$token = Auth::attempt($request->validated())) {
             return response([
                 'message' => 'Provided username or password is incorrect',
@@ -57,6 +58,27 @@ class AuthController extends Controller
         //$academic_session = AcademicSession::where('is_current', 1)->first();
 
         return new UserResource(Auth::user());
+    }
+
+    public function updateProfile(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $validator = Validator::make($request->all(), [
+            'academic_session_id' => 'sometimes|nullable|integer|exists:academic_sessions,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if ($request->has('academic_session_id')) {
+            $user->academic_session_id = $request->academic_session_id;
+            $user->save();
+        }
+
+        return new UserResource($user);
     }
     // public function refresh()
     // {
@@ -103,8 +125,10 @@ class AuthController extends Controller
     {
         return response()->json([
             'access_token' => $token,
+            'token' => $token,
+            'refreshToken' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth()->factory()->getTTL() * 60
+            'expires_in' => auth()->factory()->getTTL() * 60,
         ]);
     }
 }

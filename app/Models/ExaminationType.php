@@ -11,6 +11,8 @@ class ExaminationType extends Model
 
     protected $fillable = [
         'name',
-        'is_promotional_exam'
+        'code',
+        'description',
+        'is_promotional_exam',
     ];
 }

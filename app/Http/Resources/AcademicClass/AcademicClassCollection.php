@@ -17,3 +17,4 @@ class AcademicClassCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

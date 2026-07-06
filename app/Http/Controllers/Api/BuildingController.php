@@ -2,73 +2,63 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Building\StoreBuildingRequest;
-use App\Http\Requests\Building\UpdateBuildingRequest;
+use App\Http\Services\BuildingService;
+use App\Http\Requests\Building\BuildingRequest;
 use App\Http\Resources\Building\BuildingCollection;
 use App\Http\Resources\Building\BuildingResource;
-use App\Models\Building;
+use App\Http\Facades\BuildingFacade;
 use Illuminate\Http\Request;
 
 class BuildingController extends Controller
 {
-    protected $userLoader=['campus'];
+    use ApiResponseTrait;
+
     public function index(Request $request)
     {
-        $message=[];
-
-
-        if(!$request->has('campus_id')){
-            array_push($message,'Please provide campus_id');
-        }
-        if($message){
-            return response()->json(
-                [
-                   'status'=>false,
-                   'message' => $message
-                ]
-           , 400);
-        }
-        return new BuildingCollection(Building::with($this->userLoader)
-        ->where('campus_id',$request->input('campus_id'))
-        ->get());
+        $data = app(BuildingService::class)->getAll();
+        return new BuildingCollection($data);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreBuildingRequest $request)
+    public function store(BuildingRequest $request)
     {
         $data = $request->validated();
-        $building = Building::create($data);
-        return new BuildingResource($building->load($this->userLoader));
+        $building = BuildingFacade::create($data);
+        return new BuildingResource($building->load(BuildingFacade::getResource()));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Building $building)
+    public function show(int $id)
     {
-
-        return new BuildingResource($building->load($this->userLoader));
+        $building = BuildingFacade::getById($id);
+        if (!$building) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return new BuildingResource($building->load(BuildingFacade::getResource()));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateBuildingRequest $request, Building $building)
+    public function update(BuildingRequest $request, int $id)
     {
         $data = $request->validated();
-        $building->update($data);
-        return new BuildingResource($building->load($this->userLoader));
+        $building = BuildingFacade::update($id, $data);
+        return new BuildingResource($building->load(BuildingFacade::getResource()));
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Building $building)
+    public function destroy($id)
     {
-        $building->delete();
+        BuildingFacade::delete($id);
         return response(null, 204);
     }
 }

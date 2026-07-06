@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Services\ExaminationTypeService;
 use Illuminate\Http\Request;
 use App\Http\Requests\ExaminationType\ExaminationTypeStoreRequest;
 use App\Http\Requests\ExaminationType\ExaminationTypeUpdateRequest;
@@ -15,9 +16,10 @@ class ExaminationTypeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return new ExaminationTypeCollection(ExaminationType::all());
+        $data = app(ExaminationTypeService::class)->getAll();
+        return new ExaminationTypeCollection($data);
     }
 
     /**
@@ -26,38 +28,38 @@ class ExaminationTypeController extends Controller
     public function store(ExaminationTypeStoreRequest $request)
     {
         $data = $request->validated();
-        $examination = ExaminationType::create($data);
+        $examination = app(ExaminationTypeService::class)->create($data);
         return new ExaminationTypeResource($examination);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(int $id)
     {
-        return new ExaminationTypeResource(ExaminationType::findOrFail($id));
+        $examinationType = app(ExaminationTypeService::class)->getById($id);
+        if (!$examinationType) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return new ExaminationTypeResource($examinationType);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(ExaminationTypeUpdateRequest $request, ExaminationType $examinationType)
+    public function update(ExaminationTypeUpdateRequest $request, int $id)
     {
         $data = $request->validated();
-        $examinationType->update($data);
+        $examinationType = app(ExaminationTypeService::class)->update($id, $data);
         return new ExaminationTypeResource($examinationType);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(int $id)
     {
-        $data = ExaminationType::findOrFail($id);
-
-        if (!empty($data)) {
-            $data->delete();
-            return response(null, 204);
-        }
+        app(ExaminationTypeService::class)->delete($id);
+        return response(null, 204);
     }
 }

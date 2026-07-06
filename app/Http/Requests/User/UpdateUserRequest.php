@@ -64,6 +64,7 @@ class UpdateUserRequest extends FormRequest
             'bank_account_no' => 'sometimes|required|string|max:20',
             'bank_ifsc' => 'sometimes|required|string|max:20',
             'bank_branch' => 'sometimes|required|string|max:100',
+            'academic_session_id'=>'sometimes|nullable|exists:academic_sessions,id',
             'campus_id'=>'sometimes|nullable|exists:campuses,id',
             'admission_no'=>'sometimes|nullable',
             'admission_date'=>'sometimes|required|date',

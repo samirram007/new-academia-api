@@ -17,3 +17,4 @@ class ExaminationCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

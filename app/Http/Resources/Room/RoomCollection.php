@@ -16,3 +16,4 @@ class RoomCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

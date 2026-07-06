@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Facades\FeeFacade;
+use App\Traits\HasAcademicSession;
+use App\Http\Services\FeeService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Fee\StoreFeeRequest;
 use App\Http\Requests\Fee\UpdateFeeRequest;
@@ -15,56 +18,30 @@ use Illuminate\Http\Request;
 
 class FeeController extends Controller
 {
+    use HasAcademicSession;
+
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
-        $message = [];
+        // $academicSessionId = $this->getAcademicSessionId($request);
 
+        // if (!$academicSessionId) {
+        //     return response()->json(
+        //         [
+        //             'status' => false,
+        //             'message' => ['Please configure your academic session first.'],
+        //         ],
+        //         400
+        //     );
+        // }
 
-        if (!$request->has('academic_session_id')) {
-            array_push($message, 'Please provide academic_session_id');
-        }
-        if ($message) {
-            return response()->json(
-                [
-                    'status' => false,
-                    'message' => $message,
-                ]
-                ,
-                400
-            );
-        }
-        $fees = Fee::with(
-            'fee_template',
-            'academic_session',
-            'student',
-            'academic_class',
-            'campus',
-            'student_session',
-            'student_session.campus',
-            'student_session.academic_class',
-            'student_session.academic_session',
-            'student_session.section',
-            'student_session.fee_item_months',
+        // $request->merge(['academic_session_id' => $academicSessionId]);
 
-            'fee_items',
-            'fee_items.fee_head',
-            'fee_items.fee_item_months',
-            'fee_items.fee_item_months.month',
-            'campus',
-            'campus.school',
-            'campus.school.address',
-            'campus.school.logo_image'
-        )
-            ->where('academic_session_id', $request->academic_session_id)
-            ->where('is_deleted', '!=', 1)
-            ->whereBetween('fee_date', [$request->input('from'), $request->input('to')])
-            ->orderBy('id', 'desc')
-            ->get();
-
-        return new FeeCollection($fees);
+        // $data = app(FeeService::class)->getAllFiltered($request, ['dateField' => 'fee_date']);
+        $data=FeeFacade::getAll();
+        return new FeeCollection($data);
     }
     public function FeesByStudentSession(StudentSession $studentSession)
     {
@@ -111,6 +88,7 @@ class FeeController extends Controller
             'campus.school',
             'campus.school.address',
             'campus.school.logo_image',
+            'fee_receipts',
         ])
             ->where('is_deleted', '!=', 1) // Apply is_deleted condition to the main fees table
             ->where('student_id', $studentSession->student_id)

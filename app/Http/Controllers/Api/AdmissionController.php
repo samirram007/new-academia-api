@@ -3,64 +3,51 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\admission;
+use App\Http\Facades\AdmissionFacade;
+use App\Http\Resources\Admission\AdmissionCollection;
+use App\Http\Resources\Admission\AdmissionResource;
 use Illuminate\Http\Request;
 
 class AdmissionController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return new AdmissionCollection(AdmissionFacade::getAll());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+        $model = AdmissionFacade::create($data);
+        return new AdmissionResource($model);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(admission $admission)
+    public function show(int $id)
     {
-        //
+        $model = AdmissionFacade::getById($id);
+        if (!$model) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return new AdmissionResource($model);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(admission $admission)
+    public function update(Request $request, int $id)
     {
-        //
+        $data = $request->validate([
+            'name' => 'sometimes|string|max:255',
+        ]);
+        $model = AdmissionFacade::update($id, $data);
+        return new AdmissionResource($model);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, admission $admission)
+    public function destroy(int $id)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(admission $admission)
-    {
-        //
+        $response = AdmissionFacade::delete($id);
+        if (!$response) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return response(null, 204);
     }
 }

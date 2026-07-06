@@ -2,65 +2,68 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Traits\HasAdvancedFilter;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Teacher\StoreTeacherRequest;
+use App\Http\Requests\Teacher\UpdateTeacherRequest;
 use App\Http\Resources\Teacher\TeacherCollection;
 use App\Http\Resources\Teacher\TeacherResource;
-use App\Models\User;
+use App\Http\Facades\TeacherFacade;
 use Illuminate\Http\Request;
 
 class TeacherController extends Controller
 {
-    protected $resourceLoader = [];
+    use HasAdvancedFilter;
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with($this->resourceLoader)
-            ->where('user_type', 'teacher')
-            ->get();
-        return new TeacherCollection($users);
+        return new TeacherCollection(TeacherFacade::getAll($request));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTeacherRequest $request)
     {
         $data = $request->validated();
-        $user = User::create($data);
+        $user = TeacherFacade::create($data);
         return new TeacherResource($user);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(int $id)
     {
-        $user = User::with($this->resourceLoader)
-            ->where('user_type', 'teacher')
-            ->find($id);
+        $user = TeacherFacade::getById($id);
+        if (!$user) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
         return new TeacherResource($user);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateTeacherRequest $request, int $id)
     {
         $data = $request->validated();
-        $user = User::find($id);
-        $user->update($data);
+        $user = TeacherFacade::update($id, $data);
         return new TeacherResource($user);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(int $id)
     {
-        $user = User::find($id);
-        $user->delete();
-        return response()->noContent();
+        $response = TeacherFacade::delete($id);
+        if (!$response) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+        return response(null, 204);
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Traits\ApiResponseTrait;
+use App\Traits\HasAdvancedFilter;
 use App\Enums\AddressTypeEnum;
 use App\Enums\CasteEnum;
 use App\Enums\GenderEnum;
@@ -17,6 +19,7 @@ use App\Http\Controllers\Controller;
 
 class EnumController extends Controller
 {
+    use ApiResponseTrait, HasAdvancedFilter;
     public function address_type()
     {
         return response()->json(['data' => AddressTypeEnum::dataLabels()]);

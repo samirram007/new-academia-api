@@ -18,3 +18,4 @@ class FeeItemMonthCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

@@ -17,3 +17,4 @@ class SectionCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

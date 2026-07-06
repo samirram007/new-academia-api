@@ -3,9 +3,9 @@
 namespace App\Http\Resources\Attendance;
 
 use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\ResourceCollection;
+use App\Http\Resources\SuccessCollection;
 
-class AttendanceCollection extends ResourceCollection
+class AttendanceCollection extends SuccessCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,3 +17,4 @@ class AttendanceCollection extends ResourceCollection
         return parent::toArray($request);
     }
 }
+

@@ -17,3 +17,4 @@ class DesignationCollection extends SuccessCollection
         return parent::toArray($request);
     }
 }
+

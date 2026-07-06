@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\FeeReceiptController;
 use App\Http\Controllers\Api\ExaminationController;
 use App\Http\Controllers\Api\ExaminationResultController;
 use App\Http\Controllers\Api\ExaminationScheduleController;
@@ -49,14 +51,18 @@ use App\Http\Controllers\Api\StudentSessionController;
 use App\Http\Controllers\Api\AcademicSessionController;
 use App\Http\Controllers\Api\FeeTemplateItemController;
 use App\Http\Controllers\Api\AcademicStandardController;
+use App\Http\Controllers\Api\SettingsController;
 
 
 Route::post('auth/register', [AuthController::class, 'register']);
 Route::post('auth/login', [AuthController::class, 'login']);
+Route::post('auth/refresh', [AuthController::class, 'refresh']);
 Route::middleware('auth:api')->group(function () {
     Route::get('user', [AuthController::class, 'user']);
+    Route::put('user', [AuthController::class, 'updateProfile']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
 
+    Route::get('/dashboard', [DashboardController::class, 'index']);
     Route::apiResource('users', UserController::class);
     Route::apiResource('students', StudentController::class);
     Route::apiResource('student_id_cards', StudentIdCardController::class);
@@ -87,6 +93,9 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('sections', SectionController::class);
     Route::apiResource('subject_groups', SubjectGroupController::class);
     Route::apiResource('subjects', SubjectController::class);
+    Route::apiResource('books', \App\Http\Controllers\Api\BookController::class);
+    Route::apiResource('book_chapters', \App\Http\Controllers\Api\BookChapterController::class);
+    Route::apiResource('book_modules', \App\Http\Controllers\Api\BookModuleController::class);
 
     Route::apiResource('income_groups', IncomeGroupController::class);
     Route::apiResource('fee_heads', FeeHeadController::class);
@@ -95,6 +104,7 @@ Route::middleware('auth:api')->group(function () {
     Route::apiResource('fee_template_items', FeeTemplateItemController::class);
     Route::apiResource('fees', FeeController::class);
     Route::put('fees/soft_delete/{id}', [FeeController::class, 'softDelete']);
+    Route::apiResource('fee_receipts', FeeReceiptController::class);
     Route::get('fees_by_student_session/{student_session}', [FeeController::class, 'FeesByStudentSession']);
 
 
@@ -119,6 +129,7 @@ Route::middleware('auth:api')->group(function () {
     Route::get('daily_collection_report', [ReportController::class, 'daily_collection_report']);
     Route::get('monthly_fee_collection_report', [ReportController::class, 'monthly_fee_collection_report']);
     Route::get('exam_fees_collection_report', [ReportController::class, 'exam_fees_collection_report']);
+    Route::get('marksheet_report', [ReportController::class, 'marksheet_report']);
 
     Route::apiResource('examination_types', ExaminationTypeController::class);
 
@@ -134,6 +145,13 @@ Route::middleware('auth:api')->group(function () {
 
     //Examination Result
     Route::apiResource('examination_result', ExaminationResultController::class);
+
+    // Settings
+    Route::get('settings/by-key/{key}', [SettingsController::class, 'getByKey']);
+    Route::post('settings/bulk', [SettingsController::class, 'bulkUpsert']);
+    Route::apiResource('settings', SettingsController::class);
+
+    Route::apiResource('class_routines', \App\Http\Controllers\Api\ClassRoutineController::class);
 
 });
 Route::get('/months', [MonthController::class, 'index']);
